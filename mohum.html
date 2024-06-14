@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>텍스트 기반 모험 게임</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .game-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .choice-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .choice-button:hover {
+            background-color: #0056b3;
+        }
+        .story-image {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>모험을 시작하자</h1>
+        <div id="story"></div>
+        <img id="storyImage" class="story-image" src="" alt="">
+        <div id="choices"></div>
+    </div>
+
+    <script>
+        const storyElement = document.getElementById('story');
+        const storyImage = document.getElementById('storyImage');
+        const choicesElement = document.getElementById('choices');
+
+        const story = {
+            start: {
+                text: "당신은 어두운 숲속에 서 있습니다. 앞에는 두 갈래 길이 있습니다.",
+                img: "forest.jpg",
+                choices: [
+                    { text: "왼쪽 길로 간다", next: "leftPath" },
+                    { text: "오른쪽 길로 간다", next: "rightPath" }
+                ]
+            },
+            leftPath: {
+                text: "왼쪽 길로 가자마자 당신은 깊은 웅덩이에 빠졌습니다. 다시 일어나려는 동안, 뭔가 반짝이는 것을 발견했습니다.",
+                img: "pit.jpg",
+                choices: [
+                    { text: "반짝이는 것을 조사한다", next: "shinyObject" },
+                    { text: "웅덩이에서 나간다", next: "outOfPit" }
+                ]
+            },
+            rightPath: {
+                text: "오른쪽 길로 가자마자 커다란 늑대가 나타났습니다.",
+                img: "wolf.jpg",
+                choices: [
+                    { text: "늑대와 싸운다", next: "fightWolf" },
+                    { text: "도망친다", next: "runAway" }
+                ]
+            },
+            shinyObject: {
+                text: "반짝이는 것을 집어들자 그것은 고대의 보석이었다! 당신은 보석을 손에 쥐고 웅덩이에서 나갔다.",
+                img: "shinyObject.jpg",
+                choices: [
+                    { text: "계속 앞으로 나아간다", next: "forwardJourney" }
+                ]
+            },
+            outOfPit: {
+                text: "웅덩이에서 나와 다시 길을 찾기 시작했습니다.",
+                img: "outOfPit.jpg",
+                choices: [
+                    { text: "왼쪽 길로 간다", next: "leftPath" },
+                    { text: "오른쪽 길로 간다", next: "rightPath" }
+                ]
+            },
+            fightWolf: {
+                text: "당신은 용감하게 늑대와 싸웠지만, 불행히도 늑대에게 잡혀 먹혔습니다. 게임 오버!",
+                img: "fightWolf.jpg",
+                choices: [
+                    { text: "다시 시작", next: "start" }
+                ]
+            },
+            runAway: {
+                text: "당신은 빠르게 도망쳐 숲을 빠져나왔습니다. 안전한 길을 찾았습니다!",
+                img: "runAway.jpg",
+                choices: [
+                    { text: "계속 앞으로 나아간다", next: "forwardJourney" }
+                ]
+            },
+            forwardJourney: {
+                text: "당신은 모험을 계속하여 새로운 모험과 도전을 마주하게 됩니다. 앞에 신비로운 동굴이 나타났습니다.",
+                img: "forwardJourney.jpg",
+                choices: [
+                    { text: "동굴로 들어간다", next: "enterCave" },
+                    { text: "동굴을 지나친다", next: "passCave" }
+                ]
+            },
+            enterCave: {
+                text: "동굴 안으로 들어가자, 당신은 고대의 유물을 발견했습니다. 유물을 가져갈까요?",
+                img: "insideCave.jpg",
+                choices: [
+                    { text: "유물을 가져간다", next: "takeArtifact" },
+                    { text: "유물을 남겨둔다", next: "leaveArtifact" }
+                ]
+            },
+            passCave: {
+                text: "당신은 동굴을 지나쳐 계속 길을 나아갑니다. 결국 당신은 새로운 마을에 도착했습니다.",
+                img: "village.jpg",
+                choices: [
+                    { text: "마을로 들어간다", next: "enterVillage" },
+                    { text: "마을을 지나친다", next: "passVillage" }
+                ]
+            },
+            takeArtifact: {
+                text: "당신은 유물을 가져가기로 했습니다. 그러나 유물을 가져가는 순간, 동굴이 무너지기 시작했습니다! 급히 동굴을 빠져나가야 합니다.",
+                img: "collapse.jpg",
+                choices: [
+                    { text: "동굴에서 빠져나간다", next: "escapeCave" }
+                ]
+            },
+            leaveArtifact: {
+                text: "당신은 유물을 남겨두고 동굴을 나왔습니다. 밖으로 나오자, 이상하게도 동굴 입구가 사라졌습니다.",
+                img: "disappearedCave.jpg",
+                choices: [
+                    { text: "다시 길을 나아간다", next: "forwardJourney" }
+                ]
+            },
+            escapeCave: {
+                text: "당신은 간신히 동굴에서 빠져나왔습니다. 유물을 가지고 모험을 계속합니다.",
+                img: "outsideCave.jpg",
+                choices: [
+                    { text: "계속 앞으로 나아간다", next: "forwardJourneyWithArtifact" }
+                ]
+            },
+            forwardJourneyWithArtifact: {
+                text: "당신은 유물을 가지고 모험을 계속합니다. 유물의 힘으로 당신은 여러 위기를 무사히 넘길 수 있었습니다.",
+                img: "journeyWithArtifact.jpg",
+                choices: [
+                    { text: "계속 앞으로 나아간다", next: "mysteriousCave" }
+                ]
+            },
+            mysteriousCave: {
+                text: "당신은 숲 속에서 신비로운 동굴을 발견했습니다. 동굴 안은 매우 어두웠습니다.",
+                img: "cave.jpg",
+                choices: [
+                    { text: "동굴 안으로 들어간다", next: "enterCaveAgain" },
+                    { text: "동굴을 지나친다", next: "passCaveAgain" }
+                ]
+            },
+            enterCaveAgain: {
+                text: "동굴 안으로 들어가자, 당신은 거대한 보물을 발견했습니다. 보물을 가져갈까요?",
+                img: "treasure.jpg",
+                choices: [
+                    { text: "보물을 가져간다", next: "takeTreasure" },
+                    { text: "보물을 남겨둔다", next: "leaveTreasure" }
+                ]
+            },
+            passCaveAgain: {
+                text: "당신은 동굴을 지나쳐 계속 길을 나아갑니다. 마침내 당신은 대규모 도시를 발견했습니다.",
+                img: "city.jpg",
+                choices: [
+                    { text: "도시로 들어간다", next: "enterCity" },
+                    { text: "도시를 지나친다", next: "passCity" }
+                ]
+            },
+            takeTreasure: {
+                text: "당신은 보물을 가져가기로 했습니다. 그러나 보물을 가져가는 순간, 동굴이 무너지기 시작했습니다! 급히 동굴을 빠져나가야 합니다.",
+                img: "collapse.jpg",
+                choices: [
+                    { text: "동굴에서 빠져나간다", next: "escapeWithTreasure" }
+                ]
+            },
+            leaveTreasure: {
+                text: "당신은 보물을 남겨두고 동굴을 나왔습니다. 밖으로 나오자, 이상하게도 동굴 입구가 사라졌습니다.",
+                img: "disappearedCave.jpg",
+                choices: [
+                    { text: "다시 길을 나아간다", next: "forwardJourney" }
+                ]
+            },
+            escapeWithTreasure: {
+                text: "당신은 간신히 동굴에서 빠져나왔습니다. 보물을 가지고 모험을 계속합니다.",
+                img: "outsideCave.jpg",
+                choices: [
+                    { text: "계속 앞으로 나아간다", next: "forwardJourneyWithTreasure" }
+                ]
+            },
+            forwardJourneyWithTreasure: {
+                text: "당신은 보물을 가지고 모험을 계속합니다. 보물의 힘으로 당신은 여러 위기를 무사히 넘길 수 있었습니다.",
+                img: "journeyWithTreasure.jpg",
+                choices: [
+                    { text: "계속 앞으로 나아간다", next: "finalQuest" }
+                ]
+            },
+            finalQuest: {
+                text: "마지막으로 당신은 위대한 모험의 끝을 향해 나아갑니다. 앞에 거대한 성이 나타났습니다.",
+                img: "castle.jpg",
+                choices: [
+                    { text: "성으로 들어간다", next: "enterCastle" },
+                    { text: "성을 지나친다", next: "passCastle" }
+                ]
+            },
+            enterCastle: {
+                text: "당신은 성 안으로 들어가 왕을 만났습니다. 왕은 당신에게 왕국을 구할 마지막 임무를 부여합니다.",
+                img: "king.jpg",
+                choices: [
+                    { text: "임무를 받아들인다", next: "acceptMission" },
+                    { text: "임무를 거절한다", next: "refuseMission" }
+                ]
+            },
+            passCastle: {
+                text: "당신은 성을 지나쳐 계속 길을 나아갑니다. 하지만 성을 지나치면서 많은 기회를 놓쳤을지도 모릅니다.",
+                img: "forest.jpg",
+                choices: [
+                    { text: "계속 앞으로 나아간다", next: "forwardJourney" }
+                ]
+            },
+            acceptMission: {
+                text: "당신은 왕의 임무를 받아들여 왕국을 구하기 위한 마지막 모험을 떠납니다. 모험은 성공적으로 끝나고, 당신은 영웅으로 칭송받게 됩니다.",
+                img: "hero.jpg",
+                choices: [
+                    { text: "다시 시작", next: "start" }
+                ]
+            },
+            refuseMission: {
+                text: "당신은 임무를 거절하고 성을 떠났습니다. 하지만 이 결정으로 인해 많은 기회를 놓쳤을지도 모릅니다.",
+                img: "forest.jpg",
+                choices: [
+                    { text: "다시 시작", next: "start" }
+                ]
+            }
+        };
+
+        function showStory(node) {
+            storyElement.innerHTML = story[node].text;
+            storyImage.src = story[node].img;
+            choicesElement.innerHTML = '';
+            story[node].choices.forEach(choice => {
+                const button = document.createElement('button');
+                button.textContent = choice.text;
+                button.className = 'choice-button';
+                button.onclick = () => showStory(choice.next);
+                choicesElement.appendChild(button);
+            });
+        }
+
+        showStory('start');
+    </script>
+</body>
+</html>
