@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #282828;
+            color: white;
+        }
+        #quiz-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .correct-answer {
+            color: green;
+        }
+        .wrong-answer {
+            font-size: 5em;
+            color: white
+        }
+        .celebration {
+            display: none;
+            text-align: center;
+        }
+        .question {
+            font-size: 2em;
+            margin: 20px;
+        }
+        .answer-input {
+            font-size: 1.5em;
+            padding: 10px;
+            margin: 10px;
+        }
+        .button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+        .hint {
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5em;
+        }
+    </style>
+    <script>
+        let quizData = [];
+        let filteredQuizData = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        async function fetchQuizData() {
+            const response = await fetch('https://script.google.com/macros/s/AKfycby06dScsPKXwPllBFYtJcIazJ3CewE6Q6DT8wNnicbwEVUE-dcOkqOnIIyvxOiDPzRnYw/exec');
+            quizData = await response.json();
+        }
+
+        function populateLessonOptions() {
+            const lessonSelect = document.getElementById('lesson-select');
+            const lessons = [...new Set(quizData.map(item => item.lesson))];
+            lessons.forEach(lesson => {
+                const option = document.createElement('option');
+                option.value = lesson;
+                option.textContent = lesson;
+                lessonSelect.appendChild(option);
+            });
+        }
+
+        function populateChapterOptions(selectedLesson) {
+            const chapterSelect = document.getElementById('chapter-select');
+            chapterSelect.innerHTML = '';
+            const chapters = [...new Set(quizData.filter(item => item.lesson === selectedLesson).map(item => item.chapter))];
+            chapters.forEach(chapter => {
+                const option = document.createElement('option');
+                option.value = chapter;
+                option.textContent = chapter;
+                chapterSelect.appendChild(option);
+            });
+        }
+
+        function displayQuestion() {
+            const quizContainer = document.getElementById('quiz-container');
+            quizContainer.innerHTML = '';
+            const currentQuestion = filteredQuizData[currentQuestionIndex];
+
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question';
+            questionDiv.textContent = currentQuestion.question;
+            quizContainer.appendChild(questionDiv);
+
+            const inputDiv = document.createElement('div');
+            inputDiv.innerHTML = `<input type="text" id="answer-input" class="answer-input" />
+                                  <button class="button" onclick="checkAnswer()">Submit Answer</button>
+                                  <button class="button" onclick="showHint()">Hint</button>`;
+            quizContainer.appendChild(inputDiv);
+
+            document.getElementById('answer-input').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    checkAnswer();
+                }
+            });
+        }
+
+        function checkAnswer() {
+            const userAnswer = document.getElementById('answer-input').value;
+            const currentQuestion = filteredQuizData[currentQuestionIndex];
+            const quizContainer = document.getElementById('quiz-container');
+
+            if (userAnswer.toLowerCase() === currentQuestion.answer.toLowerCase()) {
+                score++;
+                document.getElementById('score').textContent = `Score: ${score}/${filteredQuizData.length}`;
+                showCelebration();
+                setTimeout(() => {
+                    nextQuestion();
+                }, 2000);
+            } else {
+                quizContainer.innerHTML += `<p class="wrong-answer">Answer : ${currentQuestion.answer}</p>`;
+                document.body.style.backgroundColor = 'red';
+                setTimeout(() => {
+                    document.body.style.backgroundColor = '';
+                    nextQuestion();
+                }, 3000);
+            }
+        }
+
+        function showCelebration() {
+            const celebration = document.getElementById('celebration');
+            celebration.style.display = 'block';
+            setTimeout(() => {
+                celebration.style.display = 'none';
+            }, 2000);
+        }
+
+        function showHint() {
+            const currentQuestion = filteredQuizData[currentQuestionIndex];
+            const hint = currentQuestion.answer.charAt(0) + '_'.repeat(currentQuestion.answer.length - 1);
+            alert(`Hint: ${hint}`);
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < filteredQuizData.length) {
+                displayQuestion();
+            } else {
+                alert('You have completed the quiz!');
+            }
+        }
+
+        function startQuiz() {
+            const selectedLesson = document.getElementById('lesson-select').value;
+            const selectedChapter = document.getElementById('chapter-select').value;
+            filteredQuizData = quizData.filter(item => item.lesson === selectedLesson && item.chapter == selectedChapter);
+            if (filteredQuizData.length > 0) {
+                currentQuestionIndex = 0;
+                score = 0;
+                document.getElementById('score').textContent = `Score: ${score}/${filteredQuizData.length}`;
+                displayQuestion();
+            } else {
+                alert('No questions found for the selected Lesson and Chapter.');
+            }
+        }
+
+        window.onload = async () => {
+            await fetchQuizData();
+            populateLessonOptions();
+
+            document.getElementById('lesson-select').onchange = (e) => {
+                populateChapterOptions(e.target.value);
+            };
+        }
+    </script>
+</head>
+<body>
+    <h1>Quiz Game</h1>
+    <div>
+        <label for="lesson-select">Select Lesson:</label>
+        <select id="lesson-select">
+            <option value="">--Select Lesson--</option>
+        </select>
+    </div>
+    <div>
+        <label for="chapter-select">Select Chapter:</label>
+        <select id="chapter-select">
+            <option value="">--Select Chapter--</option>
+        </select>
+    </div>
+    <div>
+        <button class="button" onclick="startQuiz()">Start Quiz</button>
+    </div>
+    <div id="quiz-container"></div>
+    <div class="celebration" id="celebration">
+        <h2>Congratulations! Correct Answer!</h2>
+    </div>
+    <div id="score">Score: 0/0</div>
+</body>
+</html>
