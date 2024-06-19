@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Quiz Game</title>
+    <title>English Quiz Game for Jihu</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,11 +22,16 @@
         }
         .wrong-answer {
             font-size: 5em;
-            color: white
+            color: white;
         }
         .celebration {
             display: none;
             text-align: center;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 999;
         }
         .question {
             font-size: 2em;
@@ -52,6 +57,23 @@
             top: 10px;
             right: 10px;
             font-size: 1.5em;
+        }
+        .firework {
+            width: 5px;
+            height: 5px;
+            background-color: red;
+            position: absolute;
+            animation: firework-animation 1s ease-out infinite;
+        }
+        @keyframes firework-animation {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(5);
+            }
         }
     </style>
     <script>
@@ -110,6 +132,8 @@
                     checkAnswer();
                 }
             });
+
+            document.getElementById('answer-input').focus();
         }
 
         function checkAnswer() {
@@ -126,7 +150,7 @@
                 }, 2000);
             } else {
                 quizContainer.innerHTML += `<p class="wrong-answer">Answer : ${currentQuestion.answer}</p>`;
-                document.body.style.backgroundColor = 'red';
+                document.body.style.backgroundColor = '#3A2020';
                 setTimeout(() => {
                     document.body.style.backgroundColor = '';
                     nextQuestion();
@@ -137,9 +161,23 @@
         function showCelebration() {
             const celebration = document.getElementById('celebration');
             celebration.style.display = 'block';
+            createFireworks();
             setTimeout(() => {
                 celebration.style.display = 'none';
+                document.getElementById('answer-input').focus();
             }, 2000);
+        }
+
+        function createFireworks() {
+            const celebration = document.getElementById('celebration');
+            for (let i = 0; i < 10; i++) {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.left = `${Math.random() * 100}vw`;
+                firework.style.top = `${Math.random() * 100}vh`;
+                celebration.appendChild(firework);
+                setTimeout(() => firework.remove(), 1000);
+            }
         }
 
         function showHint() {
@@ -165,6 +203,11 @@
                 currentQuestionIndex = 0;
                 score = 0;
                 document.getElementById('score').textContent = `Score: ${score}/${filteredQuizData.length}`;
+                document.getElementById('lesson-select').style.display = 'none';
+                document.getElementById('chapter-select').style.display = 'none';
+                document.querySelector('label[for="lesson-select"]').style.display = 'none';
+                document.querySelector('label[for="chapter-select"]').style.display = 'none';
+                document.querySelector('button[onclick="startQuiz()"]').style.display = 'none';
                 displayQuestion();
             } else {
                 alert('No questions found for the selected Lesson and Chapter.');
@@ -182,7 +225,7 @@
     </script>
 </head>
 <body>
-    <h1>Quiz Game</h1>
+    <h1>English Quiz Game for Jihu</h1>
     <div>
         <label for="lesson-select">Select Lesson:</label>
         <select id="lesson-select">
